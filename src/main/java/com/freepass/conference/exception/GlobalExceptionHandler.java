@@ -1,24 +1,15 @@
 package com.freepass.conference.exception;
 
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.ErrorResponseException;
-import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.context.request.WebRequest;
-import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-@ControllerAdvice
-public class GlobalExceptionHandler extends ResponseEntityExceptionHandler{
+@RestControllerAdvice
+public class GlobalExceptionHandler{
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Object> handleGenericException(Exception e, WebRequest request){
-        return handleErrorResponseException(
-            new ErrorResponseException(HttpStatus.FORBIDDEN, e),
-            new HttpHeaders(),
-            HttpStatus.FORBIDDEN, 
-            request
-        );
+    public ProblemDetail handleException(Exception ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
     }
 }

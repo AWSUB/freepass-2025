@@ -5,7 +5,7 @@
     "description": "secret-key for JWT token"
   },
   {
-    "name": "security.jwt.token-expiration",
+    "name": "security.jwt.expiration-time",
     "type": "java.lang.String",
     "description": "expiration time for JWT token"
   }
