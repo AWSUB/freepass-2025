@@ -7,15 +7,22 @@ import java.util.Set;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.Table;
+import jakarta.transaction.Transactional;
 
 @Entity
 @Table(name = "\"user\"")
+@Transactional
 public class User implements UserDetails{
 
     @Id
@@ -34,6 +41,11 @@ public class User implements UserDetails{
     @Column(nullable = false)
     private Set<GrantedAuthority> authorities;
 
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    @PrimaryKeyJoinColumn
+    @JsonManagedReference
+    private Profile profile;
+
     @SuppressWarnings("unused")
     private User() {}
 
@@ -42,6 +54,7 @@ public class User implements UserDetails{
         this.email = email;
         this.password = password;
         this.authorities = new HashSet<>(Set.of(authorities));
+        this.profile = new Profile(this);
     }
 
     public Integer getId() {
@@ -54,6 +67,7 @@ public class User implements UserDetails{
 
     public void setEmail(String email) {
         this.email = email;
+        this.profile.setEmail(email);
     }
 
     @Override
@@ -81,6 +95,10 @@ public class User implements UserDetails{
 
     public void setUsername(String username) {
         this.username = username;
+        this.profile.setUsername(username);
     }
 
+    public Profile getProfile() {
+        return profile;
+    }
 }
