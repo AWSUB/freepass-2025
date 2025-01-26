@@ -9,8 +9,11 @@ import com.freepass.conference.model.User;
 public class UserRegisterResponse {
 
     private Integer id;
+
     private String username;
+
     private String email;
+    
     private Collection<? extends GrantedAuthority> authorities;
 
     public UserRegisterResponse(User user) {

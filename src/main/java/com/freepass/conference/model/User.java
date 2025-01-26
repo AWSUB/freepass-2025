@@ -65,9 +65,9 @@ public class User implements UserDetails{
         return email;
     }
 
-    public void setEmail(String email) {
+    //profile must be changed manually
+    protected void setEmail(String email) {
         this.email = email;
-        this.profile.setEmail(email);
     }
 
     @Override
@@ -93,9 +93,9 @@ public class User implements UserDetails{
         return username;
     }
 
-    public void setUsername(String username) {
+    //profile must be changed manually
+    protected void setUsername(String username) {
         this.username = username;
-        this.profile.setUsername(username);
     }
 
     public Profile getProfile() {

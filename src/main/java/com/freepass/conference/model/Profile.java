@@ -10,7 +10,6 @@ import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 import jakarta.transaction.Transactional;
 
-//TODO: add later
 @Entity
 @Transactional
 public class Profile {
@@ -73,5 +72,9 @@ public class Profile {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public User getUser() {
+        return user;
     }
 }

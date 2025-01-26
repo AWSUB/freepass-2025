@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Email;
 public class UserRegisterRequest {
 
     private String username;
+    
     private String password;
 
     @Email(message = "Invalid email")
