@@ -7,6 +7,7 @@ import java.util.Set;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.CascadeType;
@@ -46,8 +47,10 @@ public class User implements UserDetails{
     @JsonManagedReference
     private Profile profile;
 
+    @JsonIgnore
     private boolean hasSession = false;
 
+    @JsonIgnore
     private boolean isSessionParticipant = false;
 
     @SuppressWarnings("unused")
@@ -81,6 +84,10 @@ public class User implements UserDetails{
 
     public void addAuthority(GrantedAuthority authority) {
         authorities.add(authority);
+    }
+
+    public void removeAuthority(String removedAuthority) {
+        authorities.removeIf(authority -> authority.getAuthority().equals(removedAuthority));
     }
 
     @Override

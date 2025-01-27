@@ -55,7 +55,9 @@ public class ApplicationConfiguration {
                 User admin = new User(
                     "admin", 
                     "admin@admin.com", 
-                    passwordEncoder().encode("administrator"), 
+                    passwordEncoder().encode("admin"),
+                    new SimpleGrantedAuthority("ROLE_USER"),
+                    new SimpleGrantedAuthority("ROLE_COORDINATOR"),
                     new SimpleGrantedAuthority("ROLE_ADMIN")
                 );
                 userRepository.save(admin);

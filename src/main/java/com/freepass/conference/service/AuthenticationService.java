@@ -17,13 +17,13 @@ import com.freepass.conference.repository.UserRepository;
 public class AuthenticationService {
 
     @Autowired
-    UserRepository userRepository;
+    private UserRepository userRepository;
 
     @Autowired
-    AuthenticationManager authenticationManager;
+    private AuthenticationManager authenticationManager;
 
     @Autowired
-    BCryptPasswordEncoder passwordEncoder;
+    private BCryptPasswordEncoder passwordEncoder;
 
     public User register(UserRegisterRequest register) {
         return userRepository.save(new User(

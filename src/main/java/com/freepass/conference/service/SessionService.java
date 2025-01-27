@@ -81,6 +81,14 @@ public class SessionService {
         return feedback;
     }
 
+    public Feedback viewFeedback(Integer sessionId, Integer feedbackId) throws Exception {
+        Session session = findSessionById(sessionId);
+        return session.getFeedbacks().stream()
+            .filter(feedback -> feedback.getId().equals(feedbackId))
+            .findFirst()
+            .orElseThrow(() -> new Exception("Feedback not found"));
+    }
+
     @Scheduled(fixedRate = 3600000)
     public void updateStatus() {
         Date currentDate = Date.from(Instant.now());
