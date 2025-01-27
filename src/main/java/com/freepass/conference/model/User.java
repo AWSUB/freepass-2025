@@ -46,6 +46,10 @@ public class User implements UserDetails{
     @JsonManagedReference
     private Profile profile;
 
+    private boolean hasSession = false;
+
+    private boolean isSessionParticipant = false;
+
     @SuppressWarnings("unused")
     private User() {}
 
@@ -66,7 +70,7 @@ public class User implements UserDetails{
     }
 
     //profile must be changed manually
-    protected void setEmail(String email) {
+   public void setEmail(String email) {
         this.email = email;
     }
 
@@ -100,5 +104,21 @@ public class User implements UserDetails{
 
     public Profile getProfile() {
         return profile;
+    }
+
+    public boolean hasSession() {
+        return hasSession;
+    }
+
+    public void setHasSession(boolean val) {
+        this.hasSession = val;
+    }
+
+    public boolean isSessionParticipant() {
+        return isSessionParticipant;
+    }
+
+    public void setIsSessionParticipant(boolean val) {
+        this.isSessionParticipant = val;
     }
 }

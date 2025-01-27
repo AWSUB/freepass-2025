@@ -5,7 +5,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.CurrentSecurityContext;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -15,18 +16,13 @@ import com.freepass.conference.model.Profile;
 import com.freepass.conference.model.User;
 import com.freepass.conference.service.UserService;
 
+//making a password updater if able
 @RestController
 @RequestMapping("/user")
 public class UserController {
 
     @Autowired
     UserService userService;
-
-    @GetMapping("")
-    public ResponseEntity<User> getUser(@CurrentSecurityContext SecurityContext context) {
-        User user = (User) context.getAuthentication().getPrincipal();
-        return ResponseEntity.ok().body(user);
-    }
 
     @GetMapping("/profile")
     public ResponseEntity<Profile> getProfile(@CurrentSecurityContext SecurityContext context) {
@@ -35,7 +31,21 @@ public class UserController {
         return ResponseEntity.ok().body(profile);
     }
 
-    @PatchMapping("/profile")
+    @GetMapping("/profile/id/{id}")
+    public ResponseEntity<Profile> viewProfile(@PathVariable Integer id) {
+        User user = userService.findUserById(id);
+        Profile profile = user.getProfile();
+        return ResponseEntity.ok().body(profile);
+    } 
+
+    @GetMapping("/profile/{username}")
+    public ResponseEntity<Profile> viewProfile(@PathVariable String username) {
+        User user = userService.findUserByUsername(username);
+        Profile profile = user.getProfile();
+        return ResponseEntity.ok().body(profile);
+    } 
+
+    @PutMapping("/profile")
     public ResponseEntity<Profile> updateProfile(
         @RequestBody ProfileUpdateRequest request, 
         @CurrentSecurityContext SecurityContext context

@@ -1,11 +1,14 @@
 package com.freepass.conference.dto;
 
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 
 public class UserRegisterRequest {
 
+    @NotBlank
     private String username;
-    
+
+    @NotBlank
     private String password;
 
     @Email(message = "Invalid email")
