@@ -24,7 +24,7 @@ import jakarta.transaction.Transactional;
 @Entity
 @Table(name = "\"user\"")
 @Transactional
-public class User implements UserDetails{
+public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -48,10 +48,10 @@ public class User implements UserDetails{
     private Profile profile;
 
     @JsonIgnore
-    private boolean hasSession = false;
+    private Session currentCreatedSession = null;
 
     @JsonIgnore
-    private boolean isSessionParticipant = false;
+    private Session currentParticipatedSession = null;
 
     @SuppressWarnings("unused")
     private User() {}
@@ -72,9 +72,9 @@ public class User implements UserDetails{
         return email;
     }
 
-    //profile must be changed manually
    public void setEmail(String email) {
         this.email = email;
+        this.profile.setEmail(email);
     }
 
     @Override
@@ -104,28 +104,28 @@ public class User implements UserDetails{
         return username;
     }
 
-    //profile must be changed manually
-    protected void setUsername(String username) {
+    public void setUsername(String username) {
         this.username = username;
+        this.profile.setUsername(username);
     }
 
     public Profile getProfile() {
         return profile;
     }
 
-    public boolean hasSession() {
-        return hasSession;
+    public Session getCurrentCreatedSession() {
+        return currentCreatedSession;
     }
 
-    public void setHasSession(boolean val) {
-        this.hasSession = val;
+    public void setCurrentCreatedSession(Session currentSession) {
+        this.currentCreatedSession = currentSession;
     }
 
-    public boolean isSessionParticipant() {
-        return isSessionParticipant;
+    public Session getCurrentParticipatedSession() {
+        return currentParticipatedSession;
     }
 
-    public void setIsSessionParticipant(boolean val) {
-        this.isSessionParticipant = val;
+    public void setCurrentParticipatedSession(Session currentParticipatedSession) {
+        this.currentParticipatedSession = currentParticipatedSession;
     }
 }

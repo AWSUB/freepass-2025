@@ -4,6 +4,9 @@ import java.util.Date;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
+import jakarta.validation.constraints.AssertTrue;
+import jakarta.validation.constraints.Future;
+
 public class SessionRequest {
 
     private String title;
@@ -13,9 +16,11 @@ public class SessionRequest {
     private Integer seatsAvailable;
 
     @JsonFormat(pattern = "dd-MM-yyyy")
+    @Future(message = "Request not valid")
     private Date registrationDateStart;
     
     @JsonFormat(pattern = "dd-MM-yyyy")
+    @Future(message = "Request not valid")
     private Date sessionStart;
 
     private Long sessionTime;
@@ -58,5 +63,13 @@ public class SessionRequest {
 
     public Long getSessionTime() {
         return sessionTime;
+    }
+
+    @AssertTrue(message = "Request not valid")
+    private boolean isRequestValid() {
+        if (seatsAvailable <= 0) return false;
+        if (sessionStart.before(registrationDateStart)) return false;
+        if (sessionTime <= 0) return false;
+        return true;
     }
 }

@@ -1,28 +1,25 @@
 package com.freepass.conference.dto;
 
+import jakarta.validation.constraints.NotNull;
+
 public class ProfileUpdateRequest {
 
-    private String username;
-
-    private String email;
-
+    @NotNull
     private String name;
 
-    public ProfileUpdateRequest(String username, String email, String name) {
-        this.username = username;
-        this.email = email;
+    @NotNull
+    private String affiliation;
+
+    public ProfileUpdateRequest(String name, String affiliation) {
         this.name = name;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public String getEmail() {
-        return email;
+        this.affiliation = affiliation;
     }
 
     public String getName() {
         return name;
-    }   
+    }
+
+    public String getAffiliation() {
+        return affiliation;
+    }
 }

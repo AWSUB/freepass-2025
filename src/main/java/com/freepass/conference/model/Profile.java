@@ -25,6 +25,8 @@ public class Profile {
     
     private String name;
 
+    private String affiliation;
+
     @OneToOne(cascade = CascadeType.ALL, optional = false)
     @MapsId
     @JsonBackReference
@@ -34,14 +36,15 @@ public class Profile {
     private Profile() {}
 
     public Profile(User user) {
-        this(user, null);
+        this(user, null, null);
     }
 
-    public Profile(User user, String name) {
+    public Profile(User user, String name, String affiliation) {
         this.username = user.getUsername();
         this.email = user.getEmail();
         this.name = name;
-        this.user = user;       
+        this.user = user;
+        this.affiliation = affiliation;
     }
 
     public Integer getId() {
@@ -52,18 +55,16 @@ public class Profile {
         return username;
     }
 
-    public void setUsername(String username) {
+    protected void setUsername(String username) {
         this.username = username;
-        this.user.setUsername(username);
     }
 
     public String getEmail() {
         return email;
     }
 
-    public void setEmail(String email) {
+    protected void setEmail(String email) {
         this.email = email;
-        this.user.setEmail(email);
     }
 
     public String getName() {
@@ -72,6 +73,14 @@ public class Profile {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getAffiliation() {
+        return affiliation;
+    }
+
+    public void setAffiliation(String affiliation) {
+        this.affiliation = affiliation;
     }
 
     public User getUser() {

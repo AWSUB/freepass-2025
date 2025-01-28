@@ -2,7 +2,6 @@ package com.freepass.conference.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import com.freepass.conference.model.User;
@@ -10,6 +9,9 @@ import com.freepass.conference.repository.UserRepository;
 
 @Service
 public class AdminService {
+
+    @Autowired
+    private SessionService sessionService;
 
     @Autowired
     private UserRepository userRepository;
@@ -24,9 +26,13 @@ public class AdminService {
         return userRepository.save(user);
     }
 
-    public User removeUser(User user) throws Exception{
-        User currentUser = userRepository.findById(user.getId()).orElseThrow(() -> new UsernameNotFoundException("User not found"));
-        userRepository.deleteById(currentUser.getId());
-        return currentUser;
+    public User removeUser(User user) throws Exception {
+        try {
+            sessionService.removeSession(user.getCurrentCreatedSession());
+            user.getCurrentParticipatedSession().removeUser(user);
+        } finally {
+            userRepository.deleteById(user.getId());
+        }
+        return user;
     }
 }

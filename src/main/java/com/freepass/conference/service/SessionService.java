@@ -22,10 +22,8 @@ public class SessionService {
     private SessionRepository sessionRepository;
 
     public Session createSession(SessionRequest request, User user) throws Exception {
-        if (!isSessionRequestValid(request)) throw new Exception("Request not valid");
-        if (user.hasSession()) throw new Exception("User already proposed a session or has an active session");
-        user.setHasSession(true);
-        return sessionRepository.save(new Session(
+        if (user.getCurrentCreatedSession() != null) throw new Exception("User already proposed a session or has an active session");
+        Session session = new Session(
             request.getTitle(),
             request.getDescription(), 
             request.getSeatsAvailable(), 
@@ -33,14 +31,9 @@ public class SessionService {
             request.getSessionStart(), 
             request.getSessionTime(), 
             user
-        ));
-    }
-
-    public boolean isSessionRequestValid(SessionRequest request) {
-        if (request.getSeatsAvailable() <= 0) return false;
-        if (request.getRegistrationDateStart().after(request.getSessionStart())) return false;
-        if (request.getSessionTime() <= 0) return false;
-        return true;
+        );
+        user.setCurrentCreatedSession(session);
+        return sessionRepository.save(session);
     }
 
     public Iterable<Session> findAllSession() {
@@ -48,54 +41,118 @@ public class SessionService {
     }
 
     public Iterable<Session> findAllSessionProposal() {
-        return sessionRepository.findByStatus(SessionStatus.PROPOSAL);
+        return sessionRepository.findAllByStatus(SessionStatus.PROPOSAL);
     }
 
     public Iterable<Session> findAllActiveSession() {
         return sessionRepository.findByStatusExcept(SessionStatus.PROPOSAL);
     }
 
-    public Session findSessionById(Integer id) throws Exception{
-        return sessionRepository.findById(id).orElseThrow(() -> new Exception("Session not found"));
+    public Session findActiveSessionById(Integer id) throws Exception {
+        for (Session session : findAllActiveSession()) {
+            if (session.getId() == id) return session;
+        }
+        throw new Exception("Active session not found");
     }
 
-    public Session approveSession(Integer id) {
-        Session session = sessionRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Session not found"));
+    public Session findSessionProposalById(Integer id) throws Exception {
+        for (Session session : findAllActiveSession()) {
+            if (session.getId() == id) return session;
+        }
+        throw new Exception("Session proposal not found");
+    }
+
+    public Iterable<Session> findSessionByUser(User user) {
+        return sessionRepository.findAllByUserCreator(user);
+    }
+
+    public Session updateSession(SessionRequest request, Session session) throws Exception {
+        if (session.getStatus() == SessionStatus.PROPOSAL) {
+            session.setTitle(request.getTitle());
+            session.setDescription(request.getDescription());
+            session.setRegistrationDateStart(request.getRegistrationDateStart());
+            session.setSessionStart(request.getSessionStart());
+            session.setSessionTime(request.getSessionTime());
+        }
+        else if (session.getStatus() != SessionStatus.FINISHED) {
+            session.setTitle(request.getTitle());
+            session.setDescription(request.getDescription());
+        }
+        else throw new Exception("Finished session cannot be updated");
+        return sessionRepository.save(session);
+    }
+
+    public Session removeSession(Session session) throws Exception {
+        if (session.getStatus() == SessionStatus.FINISHED) {
+            throw new Exception("Finished session cannot be removed");
+        }
+        sessionRepository.delete(session);
+        session.getUserCreator().setCurrentCreatedSession(null);
+        session.getRegisteredUser().forEach(user -> user.setCurrentParticipatedSession(null));
+        return session;
+    }
+
+    public Session approveSession(Integer id) throws Exception {
+        Session session = sessionRepository.findById(id).orElseThrow(() -> new Exception("Session not found"));
+        if (session.getStatus() != SessionStatus.PROPOSAL) throw new Exception("Only sessions in proposal status can be approved");
         session.setStatus(SessionStatus.SCHEDULED);
         return sessionRepository.save(session);
     }
 
+    public Session rejectSession(Integer id) throws Exception {
+        Session session = sessionRepository.findById(id).orElseThrow(() -> new Exception("Session not found"));
+        if (session.getStatus() != SessionStatus.PROPOSAL) throw new Exception("Only sessions in proposal status can be rejected");
+        session.setStatus(SessionStatus.REJECTED);
+        return sessionRepository.save(session);
+    }
+
     public Session registerSession(Integer id, User user) throws Exception {
-        Session session = findSessionById(id);
-        if (user.isSessionParticipant()) throw new Exception("User already participated in a session");
+        Session session = findActiveSessionById(id);
+        if (session.getStatus() != SessionStatus.REGISTRATION) throw new Exception("Session not in registration period");
+        if (user.getCurrentParticipatedSession() != null) throw new Exception("User already participated in a session");
         session.assignSeat(user);
-        user.setIsSessionParticipant(true);
+        user.setCurrentParticipatedSession(session);;
         return sessionRepository.save(session);
     }
 
     public Feedback giveFeedback(Integer id, FeedbackRequest request, User user) throws Exception {
-        Session session = findSessionById(id);
-        Feedback feedback = new Feedback(user, request.getContent());
+        Session session = findActiveSessionById(id);
+        if (session.getStatus() != SessionStatus.FINISHED) throw new Exception("Feedback only allowed after the session has finished");
+        Feedback feedback = new Feedback(user, request.getContent(), request.getFeedbackRating());
         session.addFeedback(feedback);
         sessionRepository.save(session);
         return feedback;
     }
 
     public Feedback viewFeedback(Integer sessionId, Integer feedbackId) throws Exception {
-        Session session = findSessionById(sessionId);
+        Session session = findActiveSessionById(sessionId);
         return session.getFeedbacks().stream()
             .filter(feedback -> feedback.getId().equals(feedbackId))
             .findFirst()
             .orElseThrow(() -> new Exception("Feedback not found"));
     }
 
-    @Scheduled(fixedRate = 3600000)
+    public Feedback deleteFeedback(Integer sessionId, Integer feedbackId) throws Exception {
+        Session session = findActiveSessionById(sessionId);
+        Feedback currentFeedback = session.getFeedbacks().stream()
+            .filter(feedback -> feedback.getId().equals(feedbackId))
+            .findFirst()
+            .orElseThrow(() -> new Exception("Feedback not found"));
+        session.getFeedbacks().remove(currentFeedback);
+        sessionRepository.save(session);
+        return currentFeedback;
+    }
+
+    @Scheduled(fixedRate = 300000)
     public void updateStatus() {
         Date currentDate = Date.from(Instant.now());
 
         Iterable<Session> sessions = sessionRepository.findAll();
 
         for (Session session : sessions) {
+            if (session.getRegistrationDateStart().before(currentDate) && session.getStatus() == SessionStatus.PROPOSAL) {
+                session.setStatus(SessionStatus.REJECTED);
+            }
             if (session.getRegistrationDateStart().before(currentDate) && session.getStatus() == SessionStatus.SCHEDULED) {
                 session.setStatus(SessionStatus.REGISTRATION);
             }
@@ -108,8 +165,8 @@ public class SessionService {
                 .isBefore(Instant.now()) && session.getStatus() == SessionStatus.ONGOING
             ) {
                 session.setStatus(SessionStatus.FINISHED);
-                session.getUserCreator().setHasSession(false);
-                session.getRegisteredUser().forEach((user) -> user.setIsSessionParticipant(false));
+                session.getUserCreator().setCurrentCreatedSession(null);
+                session.getRegisteredUser().forEach((user) -> user.setCurrentParticipatedSession(null));
             }
         }
 

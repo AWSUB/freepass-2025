@@ -2,8 +2,10 @@ package com.freepass.conference.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.freepass.conference.dto.PasswordChangeRequest;
 import com.freepass.conference.dto.ProfileUpdateRequest;
 import com.freepass.conference.model.Profile;
 import com.freepass.conference.model.User;
@@ -15,12 +17,23 @@ public class UserService {
     @Autowired
     UserRepository userRepository;
 
+    @Autowired
+    BCryptPasswordEncoder passwordEncoder;
+
+    public User changePassword(User user, PasswordChangeRequest request) {
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        return userRepository.save(user);
+    }
+
     public Profile updateProfile(ProfileUpdateRequest request, Profile profile) {
-        if (request.getUsername() != null) profile.setUsername(request.getUsername());
-        if (request.getEmail() != null) profile.setEmail(request.getEmail());
-        if (request.getName() != null) profile.setName(request.getName());
+        profile.setName(request.getName());
+        profile.setAffiliation(request.getAffiliation());
         userRepository.save(profile.getUser());
         return profile;
+    }
+
+    public Iterable<User> findAllUser() {
+        return userRepository.findAll();
     }
 
     public User findUserById(Integer id) {

@@ -3,7 +3,7 @@ package com.freepass.conference.dto;
 import java.time.Instant;
 import java.util.Date;
 
-public class UserLoginResponse {
+public class JwtTokenResponse {
 
     private String token;
 
@@ -13,7 +13,7 @@ public class UserLoginResponse {
 
     private Date expirationDate;
 
-    public UserLoginResponse(String token, Long expirationTime) {
+    public JwtTokenResponse(String token, Long expirationTime) {
         this.token = token;
         this.expirationTime = expirationTime;
         this.issuedAt = Date.from(Instant.now());

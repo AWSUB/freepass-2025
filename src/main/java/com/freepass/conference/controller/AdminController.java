@@ -2,9 +2,6 @@ package com.freepass.conference.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.CurrentSecurityContext;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,9 +11,10 @@ import org.springframework.web.bind.annotation.RestController;
 import com.freepass.conference.model.User;
 import com.freepass.conference.service.AdminService;
 import com.freepass.conference.service.UserService;
+import org.springframework.web.bind.annotation.GetMapping;
 
 @RestController
-@RequestMapping("/admin")
+@RequestMapping("/api/admin")
 public class AdminController {
 
     @Autowired
@@ -36,6 +34,12 @@ public class AdminController {
         User user = userService.findUserById(id);
         return ResponseEntity.ok().body(adminService.removeCoordinator(user));
     }
+
+    @GetMapping("/user/all")
+    public ResponseEntity<Iterable<User>> viewAllUser() {
+        return ResponseEntity.ok().body(userService.findAllUser());
+    }
+    
 
     @DeleteMapping("/user/{id}")
     public ResponseEntity<User> removeUser(@PathVariable Integer id) throws Exception {

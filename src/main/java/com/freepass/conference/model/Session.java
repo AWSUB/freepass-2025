@@ -1,5 +1,6 @@
 package com.freepass.conference.model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -13,9 +14,11 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
+import jakarta.transaction.Transactional;
 
 @Entity
-public class Session {
+@Transactional
+public class Session implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -75,7 +78,7 @@ public class Session {
         return title;
     }
 
-    public void setTitile(String title) {
+    public void setTitle(String title) {
         this.title = title;
     }
 
@@ -97,6 +100,11 @@ public class Session {
         }
         seatsAvailable--;
         registeredUser.add(user);
+    }
+
+    public void removeUser(User currentUser) {
+        registeredUser.removeIf(user -> user.getId() == currentUser.getId());
+        seatsAvailable++;
     }
 
     public Date getRegistrationDateStart() {
