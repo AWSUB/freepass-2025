@@ -1,5 +1,6 @@
 package com.freepass.conference.dto;
 
+import java.io.Serializable;
 import java.util.Date;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -7,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Future;
 
-public class SessionRequest {
+public class SessionRequest implements Serializable {
 
     private String title;
 

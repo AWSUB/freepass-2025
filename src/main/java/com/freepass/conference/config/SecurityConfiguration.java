@@ -28,6 +28,7 @@ public class SecurityConfiguration {
                     .requestMatchers("/api/auth/**").permitAll()
                     .requestMatchers(HttpMethod.DELETE, "/api/session/active/id/**").hasRole("COORDINATOR")
                     .requestMatchers("/api/session/proposal/**").hasRole("COORDINATOR")
+                    .requestMatchers("/api/session/all").hasRole("COORDINATOR")
                     .requestMatchers(HttpMethod.DELETE, "/api/session/**/feedback/**").hasRole("COORDINATOR")
                     .requestMatchers("/api/admin/**").hasRole("ADMIN")
                     .anyRequest().authenticated()
