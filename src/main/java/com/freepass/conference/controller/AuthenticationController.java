@@ -4,6 +4,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.freepass.conference.dto.UserLoginRequest;
+import com.freepass.conference.dto.DefaultResponse;
 import com.freepass.conference.dto.JwtTokenResponse;
 import com.freepass.conference.dto.UserRegisterRequest;
 import com.freepass.conference.model.User;
@@ -29,15 +30,15 @@ public class AuthenticationController {
     JwtTokenService jwtTokenService;
 
     @PostMapping("/register")
-    public ResponseEntity<User> register(@RequestBody @Valid UserRegisterRequest register) {
-        return ResponseEntity.ok().body(authenticationService.register(register));
+    public ResponseEntity<DefaultResponse<User>> register(@RequestBody @Valid UserRegisterRequest register) {
+        return ResponseEntity.ok().body(DefaultResponse.success(authenticationService.register(register)));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<JwtTokenResponse> login(@RequestBody UserLoginRequest login) {
+    public ResponseEntity<DefaultResponse<JwtTokenResponse>> login(@RequestBody UserLoginRequest login) {
         String token = jwtTokenService.buildToken(authenticationService.authenticate(login));
-        return ResponseEntity.ok().body(
+        return ResponseEntity.ok().body(DefaultResponse.success(
             new JwtTokenResponse(token, jwtTokenService.getExpirationTime())
-        );
+        ));
     }
 }

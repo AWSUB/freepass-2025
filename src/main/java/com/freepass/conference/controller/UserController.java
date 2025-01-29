@@ -13,7 +13,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.freepass.conference.dto.PasswordChangeRequest;
+import com.freepass.conference.dto.DefaultResponse;
+import com.freepass.conference.dto.DetailsChangeRequest;
 import com.freepass.conference.dto.ProfileUpdateRequest;
 import com.freepass.conference.model.Profile;
 import com.freepass.conference.model.User;
@@ -29,51 +30,51 @@ public class UserController {
     @Autowired
     UserService userService;
 
-    @PatchMapping("/password")
-    public ResponseEntity<User> changePassword(
-        @RequestBody @Valid PasswordChangeRequest request, 
+    @PatchMapping("/details")
+    public ResponseEntity<DefaultResponse<User>> changeDetails(
+        @RequestBody @Valid DetailsChangeRequest request, 
         @CurrentSecurityContext SecurityContext context
     ) {
         User user = (User) context.getAuthentication().getPrincipal();
-        userService.changePassword(user, request);
-        return ResponseEntity.ok().body(user);
+        userService.changeDetails(user, request);
+        return ResponseEntity.ok().body(DefaultResponse.success(user));
     }
 
     @GetMapping("/profile")
-    public ResponseEntity<Profile> viewProfile(@CurrentSecurityContext SecurityContext context) {
+    public ResponseEntity<DefaultResponse<Profile>> viewProfile(@CurrentSecurityContext SecurityContext context) {
         User user = (User) context.getAuthentication().getPrincipal();
         Profile profile = user.getProfile();
-        return ResponseEntity.ok().body(profile);
+        return ResponseEntity.ok().body(DefaultResponse.success(profile));
     }
 
     @GetMapping("/profile/id/{id}")
-    public ResponseEntity<Profile> viewProfile(@PathVariable Integer id) {
+    public ResponseEntity<DefaultResponse<Profile>> viewProfile(@PathVariable Integer id) {
         User user = userService.findUserById(id);
         Profile profile = user.getProfile();
-        return ResponseEntity.ok().body(profile);
+        return ResponseEntity.ok().body(DefaultResponse.success(profile));
     } 
 
     @GetMapping("/profile/{username}")
-    public ResponseEntity<Profile> viewProfile(@PathVariable String username) {
+    public ResponseEntity<DefaultResponse<Profile>> viewProfile(@PathVariable String username) {
         User user = userService.findUserByUsername(username);
         Profile profile = user.getProfile();
-        return ResponseEntity.ok().body(profile);
+        return ResponseEntity.ok().body(DefaultResponse.success(profile));
     } 
 
     @GetMapping("/profile/all")
-    public ResponseEntity<Iterable<Profile>> viewAllProfile() throws Exception {
+    public ResponseEntity<DefaultResponse<Iterable<Profile>>> viewAllProfile() throws Exception {
         ArrayList<Profile> profiles = new ArrayList<>();
         userService.findAllUser().forEach(user -> profiles.add(user.getProfile()));
-        return ResponseEntity.ok().body(profiles);
+        return ResponseEntity.ok().body(DefaultResponse.success(profiles));
     }
     
     @PatchMapping("/profile")
-    public ResponseEntity<Profile> updateProfile(
+    public ResponseEntity<DefaultResponse<Profile>> updateProfile(
         @RequestBody @Valid ProfileUpdateRequest request, 
         @CurrentSecurityContext SecurityContext context
     ) {
         User user = (User) context.getAuthentication().getPrincipal();
         Profile profile = user.getProfile();
-        return ResponseEntity.ok().body(userService.updateProfile(request, profile));
+        return ResponseEntity.ok().body(DefaultResponse.success(userService.updateProfile(request, profile)));
     }
 }

@@ -8,18 +8,18 @@ public class ProfileUpdateRequest {
     private String name;
 
     @NotNull
-    private String affiliation;
+    private String division;
 
-    public ProfileUpdateRequest(String name, String affiliation) {
+    public ProfileUpdateRequest(String name, String division) {
         this.name = name;
-        this.affiliation = affiliation;
+        this.division = division;
     }
 
     public String getName() {
         return name;
     }
 
-    public String getAffiliation() {
-        return affiliation;
+    public String getDivision() {
+        return division;
     }
 }

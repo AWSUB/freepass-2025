@@ -7,15 +7,18 @@ import java.util.Set;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.Table;
@@ -53,6 +56,10 @@ public class User implements UserDetails {
     @JsonIgnore
     private Session currentParticipatedSession = null;
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JsonBackReference
+    private Set<Session> userCreatedSession;
+
     @SuppressWarnings("unused")
     private User() {}
 
@@ -62,6 +69,7 @@ public class User implements UserDetails {
         this.password = password;
         this.authorities = new HashSet<>(Set.of(authorities));
         this.profile = new Profile(this);
+        this.userCreatedSession = new HashSet<>();
     }
 
     public Integer getId() {
@@ -72,7 +80,7 @@ public class User implements UserDetails {
         return email;
     }
 
-   public void setEmail(String email) {
+    public void setEmail(String email) {
         this.email = email;
         this.profile.setEmail(email);
     }
@@ -127,5 +135,13 @@ public class User implements UserDetails {
 
     public void setCurrentParticipatedSession(Session currentParticipatedSession) {
         this.currentParticipatedSession = currentParticipatedSession;
+    }
+
+    public Set<Session> getUserCreatedSession() {
+        return userCreatedSession;
+    }
+
+    public void addUserCreatedSession(Session userCreatedSession) {
+        this.userCreatedSession.add(userCreatedSession);
     }
 }

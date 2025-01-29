@@ -5,7 +5,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.freepass.conference.dto.PasswordChangeRequest;
+import com.freepass.conference.dto.DetailsChangeRequest;
 import com.freepass.conference.dto.ProfileUpdateRequest;
 import com.freepass.conference.model.Profile;
 import com.freepass.conference.model.User;
@@ -20,14 +20,16 @@ public class UserService {
     @Autowired
     BCryptPasswordEncoder passwordEncoder;
 
-    public User changePassword(User user, PasswordChangeRequest request) {
+    public User changeDetails(User user, DetailsChangeRequest request) {
+        if (request.getUsername() != null && !request.getUsername().isEmpty()) user.setUsername(request.getUsername());
+        if (request.getUsername() != null && !request.getEmail().isEmpty()) user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         return userRepository.save(user);
     }
 
     public Profile updateProfile(ProfileUpdateRequest request, Profile profile) {
         profile.setName(request.getName());
-        profile.setAffiliation(request.getAffiliation());
+        profile.setDivision(request.getDivision());
         userRepository.save(profile.getUser());
         return profile;
     }

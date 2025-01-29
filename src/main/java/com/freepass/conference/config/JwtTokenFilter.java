@@ -44,7 +44,7 @@ public class JwtTokenFilter extends OncePerRequestFilter{
             filterChain.doFilter(request, response);
             return;
         }
-
+        
         try {
             String token = auth.substring(7);
             Claims claims = jwtTokenService.parseToken(token);

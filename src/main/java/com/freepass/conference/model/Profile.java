@@ -1,5 +1,7 @@
 package com.freepass.conference.model;
 
+import java.io.Serializable;
+
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
 import jakarta.persistence.CascadeType;
@@ -12,7 +14,7 @@ import jakarta.transaction.Transactional;
 
 @Entity
 @Transactional
-public class Profile {
+public class Profile implements Serializable {
 
     @Id
     private Integer id;
@@ -25,7 +27,7 @@ public class Profile {
     
     private String name;
 
-    private String affiliation;
+    private String division;
 
     @OneToOne(cascade = CascadeType.ALL, optional = false)
     @MapsId
@@ -39,12 +41,12 @@ public class Profile {
         this(user, null, null);
     }
 
-    public Profile(User user, String name, String affiliation) {
+    public Profile(User user, String name, String division) {
         this.username = user.getUsername();
         this.email = user.getEmail();
         this.name = name;
         this.user = user;
-        this.affiliation = affiliation;
+        this.division = division;
     }
 
     public Integer getId() {
@@ -75,12 +77,12 @@ public class Profile {
         this.name = name;
     }
 
-    public String getAffiliation() {
-        return affiliation;
+    public String getDivision() {
+        return division;
     }
 
-    public void setAffiliation(String affiliation) {
-        this.affiliation = affiliation;
+    public void setDivision(String affiliation) {
+        this.division = affiliation;
     }
 
     public User getUser() {

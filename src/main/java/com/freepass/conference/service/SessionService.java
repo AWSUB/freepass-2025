@@ -14,9 +14,13 @@ import com.freepass.conference.model.Feedback;
 import com.freepass.conference.model.Session;
 import com.freepass.conference.model.User;
 import com.freepass.conference.repository.SessionRepository;
+import com.freepass.conference.repository.UserRepository;
 
 @Service
 public class SessionService {
+
+    @Autowired
+    private UserRepository userRepository;
 
     @Autowired
     private SessionRepository sessionRepository;
@@ -32,8 +36,12 @@ public class SessionService {
             request.getSessionTime(), 
             user
         );
-        user.setCurrentCreatedSession(session);
-        return sessionRepository.save(session);
+        session.getUser().setCurrentCreatedSession(session);
+        session.getUser().addUserCreatedSession(session);
+        Session savedSession = sessionRepository.save(session);
+        user.setCurrentCreatedSession(savedSession);
+        userRepository.save(user);
+        return savedSession;
     }
 
     public Iterable<Session> findAllSession() {
@@ -41,7 +49,7 @@ public class SessionService {
     }
 
     public Iterable<Session> findAllSessionProposal() {
-        return sessionRepository.findAllByStatus(SessionStatus.PROPOSAL);
+        return sessionRepository.findByStatus(SessionStatus.PROPOSAL);
     }
 
     public Iterable<Session> findAllActiveSession() {
@@ -63,7 +71,7 @@ public class SessionService {
     }
 
     public Iterable<Session> findSessionByUser(User user) {
-        return sessionRepository.findAllByUserCreator(user);
+        return sessionRepository.findByUser(user);
     }
 
     public Session updateSession(SessionRequest request, Session session) throws Exception {
@@ -87,8 +95,12 @@ public class SessionService {
             throw new Exception("Finished session cannot be removed");
         }
         sessionRepository.delete(session);
-        session.getUserCreator().setCurrentCreatedSession(null);
-        session.getRegisteredUser().forEach(user -> user.setCurrentParticipatedSession(null));
+        session.getUser().setCurrentCreatedSession(null);
+        userRepository.save(session.getUser());
+        session.getRegisteredUser().forEach(user -> {
+            user.setCurrentParticipatedSession(null);
+            userRepository.save(user);
+        });
         return session;
     }
 
@@ -111,7 +123,8 @@ public class SessionService {
         if (session.getStatus() != SessionStatus.REGISTRATION) throw new Exception("Session not in registration period");
         if (user.getCurrentParticipatedSession() != null) throw new Exception("User already participated in a session");
         session.assignSeat(user);
-        user.setCurrentParticipatedSession(session);;
+        user.setCurrentParticipatedSession(session);
+        userRepository.save(user);
         return sessionRepository.save(session);
     }
 
@@ -165,8 +178,12 @@ public class SessionService {
                 .isBefore(Instant.now()) && session.getStatus() == SessionStatus.ONGOING
             ) {
                 session.setStatus(SessionStatus.FINISHED);
-                session.getUserCreator().setCurrentCreatedSession(null);
-                session.getRegisteredUser().forEach((user) -> user.setCurrentParticipatedSession(null));
+                session.getUser().setCurrentCreatedSession(null);
+                userRepository.save(session.getUser());
+                session.getRegisteredUser().forEach((user) -> {
+                    user.setCurrentParticipatedSession(null);
+                    userRepository.save(user);
+                });
             }
         }
 

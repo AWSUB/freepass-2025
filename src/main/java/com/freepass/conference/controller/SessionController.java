@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.freepass.conference.dto.DefaultResponse;
 import com.freepass.conference.dto.FeedbackRequest;
 import com.freepass.conference.dto.SessionRequest;
 import com.freepass.conference.model.Feedback;
@@ -30,119 +31,119 @@ public class SessionController {
     SessionService sessionService;
 
     @PostMapping("")
-    public ResponseEntity<Session> createSession(
+    public ResponseEntity<DefaultResponse<Session>> createSession(
         @RequestBody SessionRequest request,
         @CurrentSecurityContext SecurityContext context
     ) throws Exception {
         User user = (User) context.getAuthentication().getPrincipal();
-        return ResponseEntity.ok().body(sessionService.createSession(request, user));
+        return ResponseEntity.ok().body(DefaultResponse.success(sessionService.createSession(request, user)));
     }
 
     @GetMapping("/all")
-    public ResponseEntity<Iterable<Session>> getAllSession() {
-        return ResponseEntity.ok().body(sessionService.findAllSession());
+    public ResponseEntity<DefaultResponse<Iterable<Session>>> getAllSession() {
+        return ResponseEntity.ok().body(DefaultResponse.success(sessionService.findAllSession()));
     }
     
 
     @GetMapping("/me/all")
-    public ResponseEntity<Iterable<Session>> viewMySession(@CurrentSecurityContext SecurityContext context) {
+    public ResponseEntity<DefaultResponse<Iterable<Session>>> viewMySession(@CurrentSecurityContext SecurityContext context) {
         User user = (User) context.getAuthentication().getPrincipal();
-        return ResponseEntity.ok().body(sessionService.findSessionByUser(user));
+        return ResponseEntity.ok().body(DefaultResponse.success(sessionService.findSessionByUser(user)));
     }
 
     @GetMapping("/me/current")
-    public ResponseEntity<Session> viewCurrentSession(@CurrentSecurityContext SecurityContext context) {
+    public ResponseEntity<DefaultResponse<Session>> viewCurrentSession(@CurrentSecurityContext SecurityContext context) {
         User user = (User) context.getAuthentication().getPrincipal();
-        return ResponseEntity.ok().body(user.getCurrentCreatedSession());
+        return ResponseEntity.ok().body(DefaultResponse.success(user.getCurrentCreatedSession()));
     }
 
     @PatchMapping("/me/current")
-    public ResponseEntity<Session> updateCurrentSession(
+    public ResponseEntity<DefaultResponse<Session>> updateCurrentSession(
         @RequestBody @Valid SessionRequest sessionRequest, 
         @CurrentSecurityContext SecurityContext context
     ) throws Exception {
         User user = (User) context.getAuthentication().getPrincipal();
         Session session = user.getCurrentCreatedSession();
-        return ResponseEntity.ok().body(sessionService.updateSession(sessionRequest, session));
+        return ResponseEntity.ok().body(DefaultResponse.success(sessionService.updateSession(sessionRequest, session)));
     }
 
     @DeleteMapping("/me/current")
-    public ResponseEntity<Session> removeCurrentSession(
+    public ResponseEntity<DefaultResponse<Session>> removeCurrentSession(
         @CurrentSecurityContext SecurityContext context
     ) throws Exception {
         User user = (User) context.getAuthentication().getPrincipal();
         Session session = user.getCurrentCreatedSession();
-        return ResponseEntity.ok().body(sessionService.removeSession(session));
+        return ResponseEntity.ok().body(DefaultResponse.success(sessionService.removeSession(session)));
     }
 
     @GetMapping("/proposal/{id}")
-    public ResponseEntity<Session> viewSessionProposal(@PathVariable Integer id) throws Exception {
-        return ResponseEntity.ok().body(sessionService.findSessionProposalById(id));
+    public ResponseEntity<DefaultResponse<Session>> viewSessionProposal(@PathVariable Integer id) throws Exception {
+        return ResponseEntity.ok().body(DefaultResponse.success(sessionService.findSessionProposalById(id)));
     }
 
     @GetMapping("/proposal/{id}/accept")
-    public ResponseEntity<Session> acceptSession(@PathVariable Integer id) throws Exception {
-        return ResponseEntity.ok().body(sessionService.approveSession(id));
+    public ResponseEntity<DefaultResponse<Session>> acceptSession(@PathVariable Integer id) throws Exception {
+        return ResponseEntity.ok().body(DefaultResponse.success(sessionService.approveSession(id)));
     }
 
     @GetMapping("/proposal/{id}/reject")
-    public ResponseEntity<Session> rejectSession(@PathVariable Integer id) throws Exception {
-        return ResponseEntity.ok().body(sessionService.rejectSession(id));
+    public ResponseEntity<DefaultResponse<Session>> rejectSession(@PathVariable Integer id) throws Exception {
+        return ResponseEntity.ok().body(DefaultResponse.success(sessionService.rejectSession(id)));
     }
     
     @GetMapping("/proposal/all")
-    public ResponseEntity<Iterable<Session>> viewAllSessionProposals() {
-        return ResponseEntity.ok().body(sessionService.findAllSessionProposal());
+    public ResponseEntity<DefaultResponse<Iterable<Session>>> viewAllSessionProposals() {
+        return ResponseEntity.ok().body(DefaultResponse.success(sessionService.findAllSessionProposal()));
     }
 
     @GetMapping("/active/id/{id}")
-    public ResponseEntity<Session> viewActiveSession(@PathVariable Integer id) throws Exception {
-        return ResponseEntity.ok().body(sessionService.findActiveSessionById(id));
+    public ResponseEntity<DefaultResponse<Session>> viewActiveSession(@PathVariable Integer id) throws Exception {
+        return ResponseEntity.ok().body(DefaultResponse.success(sessionService.findActiveSessionById(id)));
     }
 
     @DeleteMapping("/active/id/{id}")
-    public ResponseEntity<Session> deleteSession(@PathVariable Integer id) throws Exception {
+    public ResponseEntity<DefaultResponse<Session>> deleteSession(@PathVariable Integer id) throws Exception {
         Session session = sessionService.findActiveSessionById(id);
-        return ResponseEntity.ok().body(sessionService.removeSession(session));
+        return ResponseEntity.ok().body(DefaultResponse.success(sessionService.removeSession(session)));
     }
     
     @GetMapping("/active/all")
-    public ResponseEntity<Iterable<Session>> viewAllActiveSession() {
-        return ResponseEntity.ok().body(sessionService.findAllActiveSession());
+    public ResponseEntity<DefaultResponse<Iterable<Session>>> viewAllActiveSession() {
+        return ResponseEntity.ok().body(DefaultResponse.success(sessionService.findAllActiveSession()));
     }
 
     @PostMapping("/active/id/{id}/register")
-    public ResponseEntity<Session> registerSession(
+    public ResponseEntity<DefaultResponse<Session>> registerSession(
         @PathVariable Integer id, 
         @CurrentSecurityContext SecurityContext context
     ) throws Exception {
         User user = (User) context.getAuthentication().getPrincipal();
-        return ResponseEntity.ok().body(sessionService.registerSession(id, user));
+        return ResponseEntity.ok().body(DefaultResponse.success(sessionService.registerSession(id, user)));
     }
 
     @PostMapping("/active/id/{id}/feedback")
-    public ResponseEntity<Feedback> giveFeedback(
+    public ResponseEntity<DefaultResponse<Feedback>> giveFeedback(
         @PathVariable Integer id,
         @RequestBody FeedbackRequest request,
         @CurrentSecurityContext SecurityContext context
     ) throws Exception {
         User user = (User) context.getAuthentication().getPrincipal();
-        return ResponseEntity.ok().body(sessionService.giveFeedback(id, request, user));
+        return ResponseEntity.ok().body(DefaultResponse.success(sessionService.giveFeedback(id, request, user)));
     }
 
     @GetMapping("/active/id/{sessionId}/feedback/{feedbackId}")
-    public ResponseEntity<Feedback> viewFeedback(
+    public ResponseEntity<DefaultResponse<Feedback>> viewFeedback(
         @PathVariable Integer sessionId,
         @PathVariable Integer feedbackId
     ) throws Exception {
-       return ResponseEntity.ok().body(sessionService.viewFeedback(sessionId, feedbackId)); 
+       return ResponseEntity.ok().body(DefaultResponse.success(sessionService.viewFeedback(sessionId, feedbackId))); 
     }
 
     @DeleteMapping("/active/id/{sessionId}/feedback/{feedbackId}")
-    public ResponseEntity<Feedback> deleteFeedback(
+    public ResponseEntity<DefaultResponse<Feedback>> deleteFeedback(
         @PathVariable Integer sessionId,
         @PathVariable Integer feedbackId        
     ) throws Exception {
-        return ResponseEntity.ok().body(sessionService.deleteFeedback(sessionId, feedbackId)); 
+        return ResponseEntity.ok().body(DefaultResponse.success(sessionService.deleteFeedback(sessionId, feedbackId))); 
     }
 }

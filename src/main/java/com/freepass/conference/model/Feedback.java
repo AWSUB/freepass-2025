@@ -1,12 +1,12 @@
 package com.freepass.conference.model;
 
+import java.io.Serializable;
 import java.time.Instant;
 import java.util.Date;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.freepass.conference.enums.FeedbackRating;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -17,13 +17,13 @@ import jakarta.transaction.Transactional;
 
 @Entity
 @Transactional
-public class Feedback {
+public class Feedback implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @JsonBackReference
     private Session session;
 

@@ -10,9 +10,11 @@ import com.freepass.conference.enums.SessionStatus;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.transaction.Transactional;
 
@@ -38,11 +40,13 @@ public class Session implements Serializable {
 
     private SessionStatus status;
 
-    private User userCreator;
+    @ManyToOne
+    @JsonManagedReference
+    private User user;
 
     private List<User> registeredUser;
 
-    @OneToMany(mappedBy = "session", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "session", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JsonManagedReference
     private List<Feedback> feedbacks;
 
@@ -65,7 +69,7 @@ public class Session implements Serializable {
         this.sessionStart = sessionStart;
         this.sessionTime = sessionTime;
         this.status = SessionStatus.PROPOSAL;
-        this.userCreator = user;
+        this.user = user;
         this.registeredUser = new ArrayList<User>();
         this.feedbacks = new ArrayList<Feedback>();
     }
@@ -82,7 +86,7 @@ public class Session implements Serializable {
         this.title = title;
     }
 
-    public String getDecription() {
+    public String getDescription() {
         return description;
     }
 
@@ -139,8 +143,8 @@ public class Session implements Serializable {
         this.status = status;
     }
 
-    public User getUserCreator() {
-        return userCreator;
+    public User getUser() {
+        return user;
     }
 
     public List<User> getRegisteredUser() {
