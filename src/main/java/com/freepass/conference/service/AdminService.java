@@ -16,7 +16,10 @@ public class AdminService {
     @Autowired
     private UserRepository userRepository;
 
-    public User addCoordinator(User user) {
+    public User addCoordinator(User user) throws Exception {
+        if (user.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_COORDINATOR"))) {
+            throw new Exception("User already an event coordinator");
+        }
         user.addAuthority(new SimpleGrantedAuthority("ROLE_COORDINATOR"));
         return userRepository.save(user); 
     }

@@ -5,6 +5,8 @@ import java.time.Instant;
 import java.util.Date;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.freepass.conference.enums.FeedbackRating;
 
 import jakarta.persistence.Column;
@@ -27,6 +29,7 @@ public class Feedback implements Serializable {
     @JsonBackReference
     private Session session;
 
+    @JsonIgnore
     @Column(name = "\"user\"")
     private User user;
 
@@ -35,6 +38,9 @@ public class Feedback implements Serializable {
     private String content;
 
     private FeedbackRating rating;
+
+    @SuppressWarnings("unused")
+    private Feedback() {}
 
     public Feedback(User user, String content, FeedbackRating rating) {
         this.user = user;
@@ -55,6 +61,11 @@ public class Feedback implements Serializable {
         return user;
     }
 
+    @JsonProperty("userCreator")
+    public Profile getProfile() {
+        return user.getProfile();
+    }
+
     public Date getTimestamp() {
         return timestamp;
     }
@@ -65,5 +76,13 @@ public class Feedback implements Serializable {
 
     public FeedbackRating getFeedbackRating() {
         return rating;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return (
+            obj instanceof Feedback feedback &&
+            feedback.getId() == this.id
+        );
     }
 }

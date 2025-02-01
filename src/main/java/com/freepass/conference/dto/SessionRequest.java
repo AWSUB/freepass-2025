@@ -16,11 +16,11 @@ public class SessionRequest implements Serializable {
 
     private Integer seatsAvailable;
 
-    @JsonFormat(pattern = "dd-MM-yyyy")
+    @JsonFormat(pattern = "dd-MM-yyyy hh:mm:ss")
     @Future(message = "Request not valid")
     private Date registrationDateStart;
     
-    @JsonFormat(pattern = "dd-MM-yyyy")
+    @JsonFormat(pattern = "dd-MM-yyyy hh:mm:ss")
     @Future(message = "Request not valid")
     private Date sessionStart;
 

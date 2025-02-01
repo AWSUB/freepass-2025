@@ -5,7 +5,10 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.freepass.conference.enums.SessionStatus;
 
 import jakarta.persistence.CascadeType;
@@ -14,6 +17,9 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.transaction.Transactional;
@@ -41,9 +47,16 @@ public class Session implements Serializable {
     private SessionStatus status;
 
     @ManyToOne
-    @JsonManagedReference
+    @JsonBackReference
     private User user;
 
+    @JsonIgnore
+    @ManyToMany
+    @JoinTable(
+        name = "session_registered_users",
+        joinColumns = @JoinColumn(name = "session_id"),
+        inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
     private List<User> registeredUser;
 
     @OneToMany(mappedBy = "session", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
@@ -103,12 +116,16 @@ public class Session implements Serializable {
             throw new Exception("Seats already full");
         }
         seatsAvailable--;
-        registeredUser.add(user);
+        if (!registeredUser.contains(user)) {
+            registeredUser.add(user);
+            user.getUserCreatedSession().add(this);
+        }
     }
 
     public void removeUser(User currentUser) {
-        registeredUser.removeIf(user -> user.getId() == currentUser.getId());
+        registeredUser.removeIf(user -> user.getId().equals(currentUser.getId()));
         seatsAvailable++;
+    
     }
 
     public Date getRegistrationDateStart() {
@@ -147,15 +164,40 @@ public class Session implements Serializable {
         return user;
     }
 
+    @JsonProperty("userCreator")
+    public Profile getProfile() {
+        return user.getProfile();
+    }
+
     public List<User> getRegisteredUser() {
         return registeredUser;
+    }
+
+    @JsonProperty("registeredUser")
+    @Transactional
+    public List<Profile> getRegisteredUserProfile() {
+        ArrayList<Profile> userProfiles = new ArrayList<>();
+        registeredUser.forEach(user -> {
+            userProfiles.add(user.getProfile());
+            System.out.println(user.getId());
+        });
+        return userProfiles;
     }
 
     public List<Feedback> getFeedbacks() {
         return feedbacks;
     }
 
+    @Transactional
     public void addFeedback(Feedback feedback) {
         this.feedbacks.add(feedback);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return (
+            obj instanceof Session session &&
+            session.getId() == this.getId()
+        );
     }
 }

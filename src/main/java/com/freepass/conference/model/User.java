@@ -7,7 +7,6 @@ import java.util.Set;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
@@ -57,7 +56,7 @@ public class User implements UserDetails {
     private Session currentParticipatedSession = null;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    @JsonBackReference
+    @JsonManagedReference
     private Set<Session> userCreatedSession;
 
     @SuppressWarnings("unused")
@@ -143,5 +142,13 @@ public class User implements UserDetails {
 
     public void addUserCreatedSession(Session userCreatedSession) {
         this.userCreatedSession.add(userCreatedSession);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return (
+            obj instanceof User user &&
+            user.getId() == this.id
+        );
     }
 }

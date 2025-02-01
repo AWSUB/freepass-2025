@@ -25,7 +25,7 @@ public class AdminController {
     UserService userService;
 
     @PatchMapping("/coordinator/add/{id}")
-    public ResponseEntity<DefaultResponse<User>> addCoordinator(@PathVariable Integer id) {
+    public ResponseEntity<DefaultResponse<User>> addCoordinator(@PathVariable Integer id) throws Exception {
         User user = userService.findUserById(id);
         return ResponseEntity.ok().body(DefaultResponse.success(adminService.addCoordinator(user)));
     }

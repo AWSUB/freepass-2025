@@ -16,6 +16,8 @@ import com.freepass.conference.model.User;
 import com.freepass.conference.repository.SessionRepository;
 import com.freepass.conference.repository.UserRepository;
 
+import jakarta.transaction.Transactional;
+
 @Service
 public class SessionService {
 
@@ -44,6 +46,10 @@ public class SessionService {
         return savedSession;
     }
 
+    public Session findSessionById(Integer id) throws Exception {
+        return sessionRepository.findById(id).orElseThrow(() -> new Exception("Session not found"));
+    }
+
     public Iterable<Session> findAllSession() {
         return sessionRepository.findAll();
     }
@@ -64,7 +70,7 @@ public class SessionService {
     }
 
     public Session findSessionProposalById(Integer id) throws Exception {
-        for (Session session : findAllActiveSession()) {
+        for (Session session : findAllSessionProposal()) {
             if (session.getId() == id) return session;
         }
         throw new Exception("Session proposal not found");
@@ -75,65 +81,84 @@ public class SessionService {
     }
 
     public Session updateSession(SessionRequest request, Session session) throws Exception {
-        if (session.getStatus() == SessionStatus.PROPOSAL) {
-            session.setTitle(request.getTitle());
-            session.setDescription(request.getDescription());
-            session.setRegistrationDateStart(request.getRegistrationDateStart());
-            session.setSessionStart(request.getSessionStart());
-            session.setSessionTime(request.getSessionTime());
+        Session currentSession = sessionRepository.findById(session.getId()).orElseThrow(() -> new Exception("Session not found"));
+        if (currentSession.getStatus() == SessionStatus.PROPOSAL) {
+            currentSession.setTitle(request.getTitle());
+            currentSession.setDescription(request.getDescription());
+            currentSession.setRegistrationDateStart(request.getRegistrationDateStart());
+            currentSession.setSessionStart(request.getSessionStart());
+            currentSession.setSessionTime(request.getSessionTime());
         }
-        else if (session.getStatus() != SessionStatus.FINISHED) {
-            session.setTitle(request.getTitle());
-            session.setDescription(request.getDescription());
+        else if (currentSession.getStatus() != SessionStatus.FINISHED) {
+            currentSession.setTitle(request.getTitle());
+            currentSession.setDescription(request.getDescription());
         }
         else throw new Exception("Finished session cannot be updated");
-        return sessionRepository.save(session);
+        return sessionRepository.save(currentSession);
     }
 
     public Session removeSession(Session session) throws Exception {
-        if (session.getStatus() == SessionStatus.FINISHED) {
+        Session currentSession = findActiveSessionById(session.getId());
+        if (currentSession.getStatus() == SessionStatus.FINISHED) {
             throw new Exception("Finished session cannot be removed");
         }
-        sessionRepository.delete(session);
-        session.getUser().setCurrentCreatedSession(null);
-        userRepository.save(session.getUser());
-        session.getRegisteredUser().forEach(user -> {
+        sessionRepository.delete(currentSession);
+        currentSession.getUser().setCurrentCreatedSession(null);
+        userRepository.save(currentSession.getUser());
+        currentSession.getRegisteredUser().forEach(user -> {
             user.setCurrentParticipatedSession(null);
             userRepository.save(user);
         });
-        return session;
+        return currentSession;
     }
 
     public Session approveSession(Integer id) throws Exception {
         Session session = sessionRepository.findById(id).orElseThrow(() -> new Exception("Session not found"));
         if (session.getStatus() != SessionStatus.PROPOSAL) throw new Exception("Only sessions in proposal status can be approved");
+        else if (session.getSessionStart().before(Date.from(Instant.now()))) {
+            session.getUser().getCurrentCreatedSession().setStatus(SessionStatus.REJECTED);
+            userRepository.save(session.getUser());
+            sessionRepository.save(session);
+            throw new Exception("Session proposal expired");
+        }
         session.setStatus(SessionStatus.SCHEDULED);
+        session.getUser().getCurrentCreatedSession().setStatus(SessionStatus.SCHEDULED);
+        userRepository.save(session.getUser());
         return sessionRepository.save(session);
     }
 
     public Session rejectSession(Integer id) throws Exception {
         Session session = sessionRepository.findById(id).orElseThrow(() -> new Exception("Session not found"));
-        if (session.getStatus() != SessionStatus.PROPOSAL) throw new Exception("Only sessions in proposal status can be rejected");
+        // if (session.getStatus() != SessionStatus.PROPOSAL) throw new Exception("Only sessions in proposal status can be rejected");
         session.setStatus(SessionStatus.REJECTED);
+        session.getUser().getCurrentCreatedSession().setStatus(SessionStatus.REJECTED);
+        userRepository.save(session.getUser());
         return sessionRepository.save(session);
     }
 
+    @Transactional
     public Session registerSession(Integer id, User user) throws Exception {
-        Session session = findActiveSessionById(id);
-        if (session.getStatus() != SessionStatus.REGISTRATION) throw new Exception("Session not in registration period");
-        if (user.getCurrentParticipatedSession() != null) throw new Exception("User already participated in a session");
-        session.assignSeat(user);
-        user.setCurrentParticipatedSession(session);
-        userRepository.save(user);
-        return sessionRepository.save(session);
+        Session session = sessionRepository.findById(id).orElseThrow(() -> new Exception("Active session not found"));
+        User currentUser = userRepository.findById(user.getId()).orElseThrow(() -> new Exception("User not found"));
+        // if (session.getStatus() != SessionStatus.REGISTRATION) throw new Exception("Session not in registration period");
+        // if (currentUser.getCurrentParticipatedSession() != null) throw new Exception("User already participated in a session");
+        session.assignSeat(currentUser);
+        currentUser.setCurrentParticipatedSession(session);
+        sessionRepository.save(session);
+        userRepository.save(currentUser);
+        return session;
     }
 
+    @Transactional
     public Feedback giveFeedback(Integer id, FeedbackRequest request, User user) throws Exception {
-        Session session = findActiveSessionById(id);
-        if (session.getStatus() != SessionStatus.FINISHED) throw new Exception("Feedback only allowed after the session has finished");
-        Feedback feedback = new Feedback(user, request.getContent(), request.getFeedbackRating());
+        Session session = sessionRepository.findById(id).orElseThrow(() -> new Exception("Active session not found"));
+        User currentUser = userRepository.findById(user.getId()).orElseThrow(() -> new Exception("User not found"));
+        // if (currentUser.getCurrentParticipatedSession().getId() != session.getId()) throw new Exception("Feedback can only be given by registered user");
+        // if (session.getStatus() != SessionStatus.FINISHED) throw new Exception("Feedback only allowed after the session has finished");
+        Feedback feedback = new Feedback(currentUser, request.getContent(), request.getFeedbackRating());
         session.addFeedback(feedback);
         sessionRepository.save(session);
+        userRepository.save(currentUser);
         return feedback;
     }
 
@@ -157,20 +182,24 @@ public class SessionService {
     }
 
     @Scheduled(fixedRate = 300000)
-    public void updateStatus() {
+    public void updateStatus() throws Exception {
         Date currentDate = Date.from(Instant.now());
 
         Iterable<Session> sessions = sessionRepository.findAll();
 
         for (Session session : sessions) {
-            if (session.getRegistrationDateStart().before(currentDate) && session.getStatus() == SessionStatus.PROPOSAL) {
-                session.setStatus(SessionStatus.REJECTED);
-            }
             if (session.getRegistrationDateStart().before(currentDate) && session.getStatus() == SessionStatus.SCHEDULED) {
                 session.setStatus(SessionStatus.REGISTRATION);
+                session.getUser().getCurrentCreatedSession().setStatus(SessionStatus.REGISTRATION);
+                userRepository.save(session.getUser());
+            }
+            if (session.getSessionStart().before(currentDate) && session.getStatus() == SessionStatus.PROPOSAL) {
+                rejectSession(session.getId());
             }
             else if (session.getSessionStart().before(currentDate) && session.getStatus() == SessionStatus.REGISTRATION) {
                 session.setStatus(SessionStatus.ONGOING);
+                session.getUser().getCurrentCreatedSession().setStatus(SessionStatus.ONGOING);
+                userRepository.save(session.getUser());                
             }
             else if (
                 session.getSessionStart().toInstant()

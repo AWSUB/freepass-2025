@@ -1,9 +1,12 @@
 package com.freepass.conference.dto;
 
+import jakarta.validation.constraints.Email;
+
 public class DetailsChangeRequest {
 
     String username;
 
+    @Email(message = "Email not valid")
     String email;
 
     String password;

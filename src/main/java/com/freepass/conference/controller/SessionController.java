@@ -20,6 +20,7 @@ import com.freepass.conference.model.Feedback;
 import com.freepass.conference.model.Session;
 import com.freepass.conference.model.User;
 import com.freepass.conference.service.SessionService;
+import com.freepass.conference.service.UserService;
 
 import jakarta.validation.Valid;
 
@@ -29,6 +30,9 @@ public class SessionController {
 
     @Autowired
     SessionService sessionService;
+
+    @Autowired
+    UserService userService;
 
     @PostMapping("")
     public ResponseEntity<DefaultResponse<Session>> createSession(
@@ -48,13 +52,17 @@ public class SessionController {
     @GetMapping("/me/all")
     public ResponseEntity<DefaultResponse<Iterable<Session>>> viewMySession(@CurrentSecurityContext SecurityContext context) {
         User user = (User) context.getAuthentication().getPrincipal();
-        return ResponseEntity.ok().body(DefaultResponse.success(sessionService.findSessionByUser(user)));
+        User currentUser = userService.findUserById(user.getId());
+        return ResponseEntity.ok().body(DefaultResponse.success(sessionService.findSessionByUser(currentUser)));
     }
 
     @GetMapping("/me/current")
-    public ResponseEntity<DefaultResponse<Session>> viewCurrentSession(@CurrentSecurityContext SecurityContext context) {
+    public ResponseEntity<DefaultResponse<Session>> viewCurrentSession(@CurrentSecurityContext SecurityContext context) throws Exception {
         User user = (User) context.getAuthentication().getPrincipal();
-        return ResponseEntity.ok().body(DefaultResponse.success(user.getCurrentCreatedSession()));
+        User currentUser = userService.findUserById(user.getId());
+        Session session = currentUser.getCurrentCreatedSession();
+        Session currentSession = sessionService.findSessionById(session.getId());
+        return ResponseEntity.ok().body(DefaultResponse.success(currentSession));
     }
 
     @PatchMapping("/me/current")
@@ -63,8 +71,10 @@ public class SessionController {
         @CurrentSecurityContext SecurityContext context
     ) throws Exception {
         User user = (User) context.getAuthentication().getPrincipal();
-        Session session = user.getCurrentCreatedSession();
-        return ResponseEntity.ok().body(DefaultResponse.success(sessionService.updateSession(sessionRequest, session)));
+        User currentUser = userService.findUserById(user.getId());
+        Session session = currentUser.getCurrentCreatedSession();
+        Session currentSession = sessionService.findSessionById(session.getId());
+        return ResponseEntity.ok().body(DefaultResponse.success(sessionService.updateSession(sessionRequest, currentSession)));
     }
 
     @DeleteMapping("/me/current")
@@ -72,8 +82,10 @@ public class SessionController {
         @CurrentSecurityContext SecurityContext context
     ) throws Exception {
         User user = (User) context.getAuthentication().getPrincipal();
-        Session session = user.getCurrentCreatedSession();
-        return ResponseEntity.ok().body(DefaultResponse.success(sessionService.removeSession(session)));
+        User currentUser = userService.findUserById(user.getId());
+        Session session = currentUser.getCurrentCreatedSession();
+        Session currentSession = sessionService.findSessionById(session.getId());
+        return ResponseEntity.ok().body(DefaultResponse.success(sessionService.removeSession(currentSession)));
     }
 
     @GetMapping("/proposal/{id}")
@@ -81,12 +93,12 @@ public class SessionController {
         return ResponseEntity.ok().body(DefaultResponse.success(sessionService.findSessionProposalById(id)));
     }
 
-    @GetMapping("/proposal/{id}/accept")
+    @PatchMapping("/proposal/{id}/accept")
     public ResponseEntity<DefaultResponse<Session>> acceptSession(@PathVariable Integer id) throws Exception {
         return ResponseEntity.ok().body(DefaultResponse.success(sessionService.approveSession(id)));
     }
 
-    @GetMapping("/proposal/{id}/reject")
+    @PatchMapping("/proposal/{id}/reject")
     public ResponseEntity<DefaultResponse<Session>> rejectSession(@PathVariable Integer id) throws Exception {
         return ResponseEntity.ok().body(DefaultResponse.success(sessionService.rejectSession(id)));
     }
