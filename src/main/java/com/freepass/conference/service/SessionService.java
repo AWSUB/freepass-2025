@@ -129,7 +129,7 @@ public class SessionService {
 
     public Session rejectSession(Integer id) throws Exception {
         Session session = sessionRepository.findById(id).orElseThrow(() -> new Exception("Session not found"));
-        // if (session.getStatus() != SessionStatus.PROPOSAL) throw new Exception("Only sessions in proposal status can be rejected");
+        if (session.getStatus() != SessionStatus.PROPOSAL) throw new Exception("Only sessions in proposal status can be rejected");
         session.setStatus(SessionStatus.REJECTED);
         session.getUser().getCurrentCreatedSession().setStatus(SessionStatus.REJECTED);
         userRepository.save(session.getUser());
@@ -140,8 +140,8 @@ public class SessionService {
     public Session registerSession(Integer id, User user) throws Exception {
         Session session = sessionRepository.findById(id).orElseThrow(() -> new Exception("Active session not found"));
         User currentUser = userRepository.findById(user.getId()).orElseThrow(() -> new Exception("User not found"));
-        // if (session.getStatus() != SessionStatus.REGISTRATION) throw new Exception("Session not in registration period");
-        // if (currentUser.getCurrentParticipatedSession() != null) throw new Exception("User already participated in a session");
+        if (session.getStatus() != SessionStatus.REGISTRATION) throw new Exception("Session not in registration period");
+        if (currentUser.getCurrentParticipatedSession() != null) throw new Exception("User already participated in a session");
         session.assignSeat(currentUser);
         currentUser.setCurrentParticipatedSession(session);
         sessionRepository.save(session);
@@ -150,16 +150,16 @@ public class SessionService {
     }
 
     @Transactional
-    public Feedback giveFeedback(Integer id, FeedbackRequest request, User user) throws Exception {
+    public Session giveFeedback(Integer id, FeedbackRequest request, User user) throws Exception {
         Session session = sessionRepository.findById(id).orElseThrow(() -> new Exception("Active session not found"));
         User currentUser = userRepository.findById(user.getId()).orElseThrow(() -> new Exception("User not found"));
-        // if (currentUser.getCurrentParticipatedSession().getId() != session.getId()) throw new Exception("Feedback can only be given by registered user");
-        // if (session.getStatus() != SessionStatus.FINISHED) throw new Exception("Feedback only allowed after the session has finished");
-        Feedback feedback = new Feedback(currentUser, request.getContent(), request.getFeedbackRating());
+        if (currentUser.getCurrentParticipatedSession().getId() != session.getId()) throw new Exception("Feedback can only be given by registered user");
+        if (session.getStatus() != SessionStatus.FINISHED) throw new Exception("Feedback only allowed after the session has finished");
+        Feedback feedback = new Feedback(currentUser, session, request.getContent(), request.getFeedbackRating());
         session.addFeedback(feedback);
-        sessionRepository.save(session);
+        Session currentSession = sessionRepository.save(session);
         userRepository.save(currentUser);
-        return feedback;
+        return currentSession;
     }
 
     public Feedback viewFeedback(Integer sessionId, Integer feedbackId) throws Exception {
@@ -193,7 +193,7 @@ public class SessionService {
                 session.getUser().getCurrentCreatedSession().setStatus(SessionStatus.REGISTRATION);
                 userRepository.save(session.getUser());
             }
-            if (session.getSessionStart().before(currentDate) && session.getStatus() == SessionStatus.PROPOSAL) {
+            else if (session.getSessionStart().before(currentDate) && session.getStatus() == SessionStatus.PROPOSAL) {
                 rejectSession(session.getId());
             }
             else if (session.getSessionStart().before(currentDate) && session.getStatus() == SessionStatus.REGISTRATION) {

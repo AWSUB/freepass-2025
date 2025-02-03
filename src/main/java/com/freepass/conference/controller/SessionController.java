@@ -134,7 +134,7 @@ public class SessionController {
     }
 
     @PostMapping("/active/id/{id}/feedback")
-    public ResponseEntity<DefaultResponse<Feedback>> giveFeedback(
+    public ResponseEntity<DefaultResponse<Session>> giveFeedback(
         @PathVariable Integer id,
         @RequestBody FeedbackRequest request,
         @CurrentSecurityContext SecurityContext context

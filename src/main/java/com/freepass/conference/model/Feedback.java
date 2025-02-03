@@ -42,8 +42,9 @@ public class Feedback implements Serializable {
     @SuppressWarnings("unused")
     private Feedback() {}
 
-    public Feedback(User user, String content, FeedbackRating rating) {
+    public Feedback(User user, Session session, String content, FeedbackRating rating) {
         this.user = user;
+        this.session = session;
         this.timestamp = Date.from(Instant.now());
         this.content = content;
         this.rating = rating;

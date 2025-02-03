@@ -174,12 +174,10 @@ public class Session implements Serializable {
     }
 
     @JsonProperty("registeredUser")
-    @Transactional
     public List<Profile> getRegisteredUserProfile() {
         ArrayList<Profile> userProfiles = new ArrayList<>();
         registeredUser.forEach(user -> {
             userProfiles.add(user.getProfile());
-            System.out.println(user.getId());
         });
         return userProfiles;
     }
